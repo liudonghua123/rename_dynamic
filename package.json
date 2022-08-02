@@ -1,0 +1,55 @@
+{
+  "name": "rename_dynamic",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "bin": "dist/index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "files": [
+    "dist/**/*",
+    "!dist/**/*.test.js"
+  ],
+  "scripts": {
+    "dev": "ts-node ./src/index.ts",
+    "clean": "rimraf ./dist/ ./build/",
+    "build": "npm run clean && tsc",
+    "build-pkg": "npm run build && pkg . --out-dir ./build/",
+    "build-node": "npm run build && ncc build dist/index.js -o build && shx mv build/index.js build/rename_dynamic"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liudonghua123/rename_dynamic.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/liudonghua123/rename_dynamic/issues"
+  },
+  "homepage": "https://github.com/liudonghua123/rename_dynamic#readme",
+  "devDependencies": {
+    "@types/mustache": "^4.2.1",
+    "@types/node": "^18.6.3",
+    "@vercel/ncc": "^0.34.0",
+    "pkg": "^5.8.0",
+    "rimraf": "^3.0.2",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "commander": "^9.4.0",
+    "debug": "^4.3.4",
+    "es6-template-strings": "^2.0.1",
+    "globby": "^11.0.4",
+    "handlebars": "^4.7.7",
+    "handlebars-delimiters": "^1.0.0",
+    "mustache": "^4.2.0",
+    "papaparse": "^5.3.2"
+  },
+  "engines": {
+    "node": ">=14.16"
+  }
+}
