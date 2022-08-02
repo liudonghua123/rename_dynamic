@@ -33,3 +33,4 @@ jobs:
           file: build/*
           tags: true
           draft: false
+          overwrite: true
