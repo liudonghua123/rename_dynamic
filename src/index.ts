@@ -2,7 +2,6 @@
 
 import { program } from 'commander';
 import mustache from 'mustache';
-import template from 'es6-template-strings';
 const debug = require('debug')('main')
 import fs from 'fs';
 
@@ -12,6 +11,20 @@ import globby from 'globby';
 import { dirname, basename, join } from 'path';
 
 // import { version } from '../package.json';
+
+// inspired by https://github.com/dondido/express-es6-template-engine
+function template(expr: string, locals: { [key: string]: string }): string {
+  const localsKeys = Object.keys(locals);
+  const localsValues = localsKeys.map(i => locals[i]);
+  try {
+    const compile = (expr: string, args: string | string[]) => Function(...args, 'return `' + expr + '`;');
+    const result = compile(expr, localsKeys)(...localsValues);
+    return result;
+  } catch (err: any) {
+    console.error(err);
+    return err.message;
+  }
+}
 
 // see https://github.com/janl/mustache.js#custom-delimiters
 mustache.tags = ['${', '}'];
