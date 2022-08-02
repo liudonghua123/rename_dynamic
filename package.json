@@ -16,7 +16,7 @@
     "clean": "rimraf ./dist/ ./build/",
     "build": "npm run clean && tsc",
     "build-pkg": "npm run build && pkg . --out-dir ./build/",
-    "build-node": "npm run build && ncc build dist/index.js -o build && shx mv build/index.js build/rename_dynamic"
+    "build-node": "ncc build dist/index.js -o build && shx mv build/index.js build/rename_dynamic"
   },
   "repository": {
     "type": "git",
