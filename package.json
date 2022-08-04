@@ -15,7 +15,7 @@
     "dev": "ts-node ./src/index.ts",
     "clean": "rimraf ./dist/ ./build/",
     "build": "npm run clean && tsc",
-    "build-pkg": "pkg . --out-dir ./build/",
+    "build-pkg": "npm run build && pkg . --out-dir ./build/",
     "build-node": "ncc build dist/index.js -o build && shx mv build/index.js build/rename_dynamic"
   },
   "repository": {
