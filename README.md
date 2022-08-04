@@ -1,6 +1,20 @@
 # rename_dynamic
 
-This is a small node cli utility for renaming files according to the csv data provided and use regex for more flexiability.
+This is a small node cli utility for renaming files according to the csv data provided and use regex for more flexiability. 
+
+And it includes a small template engine which support js template literal like synatx, for instance, `-o "${id:name}_${prefix.substr(0,2)}.${ext.toLowerCase()}"` and filters which has ultimate extendibility, for example, if you want some features like `head` like bash cli, just write the following js code to `$HOME/.rename_dynamic/filters/head.js`, and then you can write the output pattern like ``-o "${id:name}_${prefix | head(2)}.${ext.toLowerCase()}"``. 
+
+Now it only includes a few builtin filters like lowercase, uppercase and capitalize just for demonstration. But you can write your own filters. It's just a default exported function which has `(value: string): string => { // do your job, return a new string }`. If your filter would like accept some args for customization, just return the function.
+
+```js
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = function head(limit) {
+    return function (value) {
+        return value.substring(0, limit);
+    };
+}
+```
 
 ### How to run it
 
@@ -13,13 +27,14 @@ If you have node installed, just download [rename_dynamic](https://github.com/li
 3. `yarn`
 4. `yarn tsc`
 5. `node . -h`
-5. ``node . -i "(?<prefix>.*)(?<id>\d+)\.(?<ext>.*)" -o "${id:name}_${prefix}.${ext}" -s id -c sample.csv tests``
+5. Run it, for example, ``node . -i "(?<prefix>.*)(?<id>\d+)\.(?<ext>.*)" -o "${id:name}_${prefix | lowercase}.${ext.substring(0,3)}" -s id -c sample.csv tests``
 
 ### TODOs
 
-- [ ] refact code
-- [x] support template string operation in output regex, like `-o "${id:name}_${prefix.substr(0,2)}.${ext.toLowerCase()}"`
-- [x] package for deployment
+- [ ] refact code, separate the core functionalites and cli binary
+- [x] support named group regex in the input pattern and js template literal like synatax in the output pattern.
+- [x] package using `pkg` and `ncc` for deployment
+- [x] support filter features in the output pattern.
 
 ### Reference
 
