@@ -4,20 +4,53 @@ import { program } from 'commander';
 import mustache from 'mustache';
 const debug = require('debug')('main')
 import fs from 'fs';
+// import filters from './filters/index';
+import external_filters, * as builtin_filters from './filters';
 
 // Error [ERR_REQUIRE_ESM]: require() of ES Module
 // see https://github.com/sindresorhus/globby/issues/193#issuecomment-991556042
 import globby from 'globby';
 import { dirname, basename, join } from 'path';
+import { init_config_dir } from './config';
 
 // import { version } from '../package.json';
 
+function pipe_to_function(expr: string): string {
+  if (expr.includes('|')) {
+    const pipes = expr.split('|').map(i => i.trim());
+    // convert the first part to a string variable
+    const initialValue = pipes[0];
+    const filters = pipes.slice(1);
+    const result = filters.reduce((prev, curr) => {
+      return `${curr}(${prev})`;
+    }, initialValue);
+    // debug(`initialValue: ${initialValue}, filters: ${filters}, result: ${result}`);
+    return result;
+  }
+  else {
+    return expr;
+  }
+}
+
+function filterize(expr: string): string {
+  // check if the expr contains pipe opeartion
+  // change the expr to a function call chain
+  // e.g. "name | lowercase" to "lowercase(name)"
+  // use regex replace the content in ${} with pipe_to_function
+  return expr.replace(/\${\s*(?<content>[^}]+)\s*}/g, (match, p1) => {
+    return `\$\{${pipe_to_function(p1)}\}`;
+  })
+}
+
 // inspired by https://github.com/dondido/express-es6-template-engine
-function template(expr: string, locals: { [key: string]: string }): string {
+function template(expr: string, locals: { [key: string]: any }): string {
+  debug(`template expr: ${expr}, locals: ${JSON.stringify(locals)}`);
   const localsKeys = Object.keys(locals);
   const localsValues = localsKeys.map(i => locals[i]);
   try {
     const compile = (expr: string, args: string | string[]) => Function(...args, 'return `' + expr + '`;');
+    expr = filterize(expr);
+    debug(`template filterize expr: ${expr}`);
     const result = compile(expr, localsKeys)(...localsValues);
     return result;
   } catch (err: any) {
@@ -125,7 +158,6 @@ function rename(data: { [key: string]: string }[], original_filename: string) {
   let renamed_filename = null;
   if (match) {
     debug(`found input regexp matched filename ${original_filename}`);
-    debug(`the match is ${JSON.stringify(match)}, match.groups: ${JSON.stringify(match.groups)}`);
     const source_field_value = match!.groups![ID_FIELD];
     const { all, source, target } = target_field_names;
     if (source !== ID_FIELD) {
@@ -140,7 +172,7 @@ function rename(data: { [key: string]: string }[], original_filename: string) {
     consumed_data.add(source_field_value);
     renamed_filename = options.output.replace(all, target_field_value);
     // renamed_filename = mustache.render(renamed_filename, match.groups!);
-    renamed_filename = template(renamed_filename, match.groups!);
+    renamed_filename = template(renamed_filename, { ...match.groups!, ...filters });
     console.info(`prepare rename ${original_filename} to ${renamed_filename}`);
   }
   else {
@@ -148,10 +180,22 @@ function rename(data: { [key: string]: string }[], original_filename: string) {
   }
   return renamed_filename;
 }
+let filters: { [x: string]: Function; } = {};
 
 (async () => {
+  init_config_dir();
   const files_to_handle = await globby(program.args);
   debug(`files_to_handle: ${files_to_handle}`);
+  debug(`builtin_filters, keys: ${Object.keys(builtin_filters)}, ${JSON.stringify(builtin_filters)}`);
+  // static load the buildin filters
+  filters = { ...builtin_filters }
+  // delete the unused default export from builtin_filters, or it will be got Uncaught SyntaxError: Unexpected token 'default'
+  delete filters.default;  
+  // dynamic load the external filters
+  for await (const filter_function of external_filters()) {
+    filters[filter_function.name] = filter_function;
+  }
+  debug(`loaded filters, keys: ${Object.keys(filters)}, ${JSON.stringify(filters)}`);
   const processed_files: string[] = []
   for (const file_path of files_to_handle) {
     const dir = dirname(file_path);
