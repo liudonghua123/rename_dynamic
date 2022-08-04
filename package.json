@@ -42,7 +42,6 @@
   "dependencies": {
     "commander": "^9.4.0",
     "debug": "^4.3.4",
-    "es6-template-strings": "^2.0.1",
     "globby": "^11.0.4",
     "handlebars": "^4.7.7",
     "handlebars-delimiters": "^1.0.0",
