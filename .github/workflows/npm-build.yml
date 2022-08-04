@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: |
           yarn build
-          cd dist && patch < ..\filters-import.patch && cd ..
+          cd dist && patch -i ../filters-import.patch && cd ..
           yarn build-pkg
           yarn build-node
 
